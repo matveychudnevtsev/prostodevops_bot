@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Просто DevOps</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #7c3aed;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, var(--dark-bg));
+            color: var(--tg-theme-text-color, var(--text-primary));
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            background: var(--tg-theme-secondary-bg-color, var(--card-bg));
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-color);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* Content sections */
+        .content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Course cards */
+        .course-card {
+            background: var(--tg-theme-secondary-bg-color, var(--card-bg));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .course-card:hover::before {
+            left: 100%;
+        }
+
+        .course-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border-color: var(--primary-color);
+        }
+
+        .course-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .course-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .course-title {
+            flex: 1;
+        }
+
+        .course-title h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .course-title p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .promo-section {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .promo-label {
+            font-size: 12px;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .promo-code {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            background: var(--dark-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .promo-code:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .promo-code:active {
+            transform: scale(0.98);
+        }
+
+        .copy-icon {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .action-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        /* Beginner guide */
+        .step-card {
+            background: var(--tg-theme-secondary-bg-color, var(--card-bg));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            padding-left: 60px;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateX(4px);
+            border-color: var(--primary-color);
+        }
+
+        .step-number {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .step-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success-color);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tech stack badges */
+        .tech-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .tech-badge {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+        }
+
+        /* Info card */
+        .info-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(37, 99, 235, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .info-card h4 {
+            color: var(--success-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .nav-item {
+                font-size: 14px;
+                padding: 14px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Просто DevOps</h1>
+            <p>Твой путь в мир автоматизации</p>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-item active" data-tab="courses">📚 Курсы</div>
+            <div class="nav-item" data-tab="beginner">🎯 Новичку</div>
+        </div>
+
+        <!-- Курсы -->
+        <div class="content active" id="courses">
+            <div class="course-card">
+                <div class="course-header">
+                    <div class="course-icon">🐧</div>
+                    <div class="course-title">
+                        <h3>Linux для начинающих</h3>
+                        <p>Основы работы с Linux системами</p>
+                    </div>
+                </div>
+                
+                <div class="tech-badges">
+                    <span class="tech-badge">Ubuntu</span>
+                    <span class="tech-badge">Bash</span>
+                    <span class="tech-badge">Terminal</span>
+                </div>
+
+                <div class="promo-section">
+                    <div class="promo-label">
+                        <span>🎁</span>
+                        <span>Промокод на скидку 30%</span>
+                    </div>
+                    <div class="promo-code" onclick="copyPromo('LINUX2024')">
+                        <span>LINUX2024</span>
+                        <span class="copy-icon">📋</span>
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="openCourse('https://stepik.org/course/762/promo/LINUX2024')">
+                    <span>Перейти к курсу</span>
+                    <span>→</span>
+                </button>
+            </div>
+
+            <div class="course-card">
+                <div class="course-header">
+                    <div class="course-icon">⚙️</div>
+                    <div class="course-title">
+                        <h3>DevOps практики</h3>
+                        <p>CI/CD, автоматизация и мониторинг</p>
+                    </div>
+                </div>
+                
+                <div class="tech-badges">
+                    <span class="tech-badge">Jenkins</span>
+                    <span class="tech-badge">GitLab CI</span>
+                    <span class="tech-badge">Ansible</span>
+                    <span class="tech-badge">Terraform</span>
+                </div>
+
+                <div class="promo-section">
+                    <div class="promo-label">
+                        <span>🎁</span>
+                        <span>Промокод на скидку 35%</span>
+                    </div>
+                    <div class="promo-code" onclick="copyPromo('DEVOPS2024')">
+                        <span>DEVOPS2024</span>
+                        <span class="copy-icon">📋</span>
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="openCourse('https://stepik.org/course/73964/promo/DEVOPS2024')">
+                    <span>Перейти к курсу</span>
+                    <span>→</span>
+                </button>
+            </div>
+
+            <div class="course-card">
+                <div class="course-header">
+                    <div class="course-icon">🐳</div>
+                    <div class="course-title">
+                        <h3>Docker и контейнеризация</h3>
+                        <p>От основ до Kubernetes</p>
+                    </div>
+                </div>
+                
+                <div class="tech-badges">
+                    <span class="tech-badge">Docker</span>
+                    <span class="tech-badge">Docker Compose</span>
+                    <span class="tech-badge">Kubernetes</span>
+                    <span class="tech-badge">Helm</span>
+                </div>
+
+                <div class="promo-section">
+                    <div class="promo-label">
+                        <span>🎁</span>
+                        <span>Промокод на скидку 40%</span>
+                    </div>
+                    <div class="promo-code" onclick="copyPromo('DOCKER2024')">
+                        <span>DOCKER2024</span>
+                        <span class="copy-icon">📋</span>
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="openCourse('https://stepik.org/course/74010/promo/DOCKER2024')">
+                    <span>Перейти к курсу</span>
+                    <span>→</span>
+                </button>
+            </div>
+
+            <div class="course-card">
+                <div class="course-header">
+                    <div class="course-icon">🔐</div>
+                    <div class="course-title">
+                        <h3>Права и безопасность в Linux</h3>
+                        <p>Управление доступом и защита системы</p>
+                    </div>
+                </div>
+                
+                <div class="tech-badges">
+                    <span class="tech-badge">chmod/chown</span>
+                    <span class="tech-badge">SELinux</span>
+                    <span class="tech-badge">iptables</span>
+                    <span class="tech-badge">SSH</span>
+                </div>
+
+                <div class="promo-section">
+                    <div class="promo-label">
+                        <span>🎁</span>
+                        <span>Промокод на скидку 25%</span>
+                    </div>
+                    <div class="promo-code" onclick="copyPromo('SECURITY2024')">
+                        <span>SECURITY2024</span>
+                        <span class="copy-icon">📋</span>
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="openCourse('https://stepik.org/course/1547/promo/SECURITY2024')">
+                    <span>Перейти к курсу</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Новичку -->
+        <div class="content" id="beginner">
+            <div class="info-card">
+                <h4>
+                    <span>👋</span>
+                    <span>Добро пожаловать в сообщество!</span>
+                </h4>
+                <p>Следуй нашему пошаговому плану, чтобы начать свой путь в DevOps правильно</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Присоединись к сообществу</h4>
+                    <p>Подпишись на наш Telegram-канал @prostodevops и чат для общения с единомышленниками</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Изучи основы Linux</h4>
+                    <p>Начни с курса "Linux для начинающих". Это фундамент для любого DevOps-инженера</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Освой контейнеризацию</h4>
+                    <p>Docker - must-have технология. Пройди курс по Docker и научись работать с контейнерами</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>Изучи CI/CD практики</h4>
+                    <p>Автоматизация - ключ к эффективности. Курс "DevOps практики" научит тебя строить пайплайны</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>Практикуйся на реальных проектах</h4>
+                    <p>Создай свой pet-проект: разверни приложение, настрой CI/CD, мониторинг и логирование</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h4>Участвуй в опенсорсе</h4>
+                    <p>Контрибьють в open source проекты - отличный способ набраться опыта и пополнить портфолио</p>
+                </div>
+            </div>
+
+            <div class="info-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1)); border-color: rgba(245, 158, 11, 0.3);">
+                <h4 style="color: var(--warning-color);">
+                    <span>💡</span>
+                    <span>Полезные ресурсы</span>
+                </h4>
+                <p>• YouTube: @ProstoDevOps - видео-туториалы и разборы<br>
+                   • GitHub: @prostodevops - примеры кода и конфигураций<br>
+                   • Medium: @prostodevops - статьи и best practices</p>
+            </div>
+
+            <button class="action-button" onclick="joinCommunity()" style="margin-top: 24px;">
+                <span>Присоединиться к каналу</span>
+                <span>🚀</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // Применение темы
+        const applyTheme = () => {
+            const theme = tg.themeParams;
+            document.documentElement.style.setProperty('--tg-theme-bg-color', theme.bg_color || '#0f172a');
+            document.documentElement.style.setProperty('--tg-theme-text-color', theme.text_color || '#f1f5f9');
+            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', theme.secondary_bg_color || '#1e293b');
+        };
+
+        applyTheme();
+        tg.onEvent('themeChanged', applyTheme);
+
+        // Навигация
+        const navItems = document.querySelectorAll('.nav-item');
+        const contents = document.querySelectorAll('.content');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const tabName = item.dataset.tab;
+                
+                // Обновление активной вкладки
+                navItems.forEach(nav => nav.classList.remove('active'));
+                contents.forEach(content => content.classList.remove('active'));
+                
+                item.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+                
+                // Тактильный отклик
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        });
+
+        // Копирование промокода
+        function copyPromo(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast(`Промокод ${code} скопирован!`);
+                
+                // Отправка данных боту
+                tg.sendData(JSON.stringify({
+                    action: 'promo_copied',
+                    promo: code,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                // Тактильный отклик
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            });
+        }
+
+        // Открытие курса
+        function openCourse(url) {
+            // Отправка данных боту
+            const courseName = url.includes('762') ? 'Linux' : 
+                            url.includes('73964') ? 'DevOps' :
+                            url.includes('74010') ? 'Docker' : 'Security';
+            
+            tg.sendData(JSON.stringify({
+                action: 'course_opened',
+                course: courseName,
+                timestamp: new Date().toISOString()
+            }));
+            
+            // Открытие ссылки
+            tg.openLink(url);
+            
+            // Тактильный отклик
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        // Присоединение к сообществу
+        function joinCommunity() {
+            tg.sendData(JSON.stringify({
+                action: 'join_community',
+                timestamp: new Date().toISOString()
+            }));
+            
+            tg.openTelegramLink('https://t.me/prostodevops');
+            
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        // Показ уведомления
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Настройка кнопки "Назад"
+        if (tg.BackButton) {
+            tg.BackButton.show();
+            tg.BackButton.onClick(() => {
+                tg.close();
+            });
+        }
+
+        // Отслеживание активности
+        document.addEventListener('DOMContentLoaded', () => {
+            tg.sendData(JSON.stringify({
+                action: 'app_opened',
+                timestamp: new Date().toISOString()
+            }));
+        });
+    </script>
+</body>
+</html>
